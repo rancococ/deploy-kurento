@@ -4,7 +4,6 @@
 # deploy.sh
 # --load   : 加载镜像
 # --init   : 初始目录
-# --deploy : 部署项目
 ##########################################################################
 
 set -e
@@ -73,8 +72,6 @@ arg_help=
 arg_init=
 arg_load=
 arg_images_package=
-arg_deploy=
-arg_deploy_package=
 arg_empty=true
 
 #
@@ -91,7 +88,7 @@ arg_empty=true
 # $@ 从命令行取出参数列表(不能用用 $* 代替，因为 $* 将所有的参数解释成一个字符串
 #                         而 $@ 是一个参数数组)
 # args=`getopt -o ab:c:: -a -l apple,banana:,cherry:: -n "${source}" -- "$@"`
-args=`getopt -o h -a -l help,init,load:,deploy: -n "${source}" -- "$@"`
+args=`getopt -o h -a -l help,init,load: -n "${source}" -- "$@"`
 # 判定 getopt 的执行时候有错，错误信息输出到 STDERR
 if [ $? != 0 ]; then
     error "Terminating..." >&2
@@ -124,13 +121,6 @@ do
             arg_images_package=$2
             shift 2
             ;;
-        --deploy | -deploy)
-            info "option --deploy argument : $2"
-            arg_deploy=true
-            arg_empty=false
-            arg_deploy_package=$2
-            shift 2
-            ;;
         --)
             shift
             break
@@ -148,15 +138,13 @@ for arg do
 done
 
 # show usage
-usage=$"`basename $0` [-h|--help] [--init] [--load=xxx.tgz] [--deploy=xxx.war]
+usage=$"`basename $0` [-h|--help] [--init] [--load=xxx.tgz]
        [-h|--help]
                        show help info.
        [--init]
                        init volume.
        [--load=xxx.tgz]
                        load images.
-       [--deploy=xxx.war]
-                       deploy war to datadir.
 "
 
 
@@ -202,23 +190,6 @@ fun_load_images() {
     return 0
 }
 
-# deploy war
-fun_deploy_war() {
-    header "deploy war : "
-    info "deploy war : ${arg_deploy_package}"
-    suffix="${arg_deploy_package##*.}"
-    if [ "x${suffix}" == "xwar" ]; then
-        \rm -rf "${base_dir}/volume/tomcat/data/"
-        mkdir -p "${base_dir}/volume/tomcat/data/"
-        chmod -R 777 "${base_dir}/volume/tomcat/data/"
-        unzip -q "${arg_deploy_package}" -d "${base_dir}/volume/tomcat/data/"
-        success "successfully deployed ${arg_deploy_package}"
-    else
-        error "unsupported file format : ${arg_deploy_package}"
-    fi
-    return 0
-}
-
 
 ##########################################################################
 
@@ -246,15 +217,6 @@ if [ "x${arg_load}" == "xtrue" ]; then
         exit 1
     fi
     fun_load_images;
-fi
-
-# deploy war
-if [ "x${arg_deploy}" == "xtrue" ]; then
-    if [ ! -f ${arg_deploy_package} ]; then
-        usage "$usage";
-        exit 1
-    fi
-    fun_deploy_war;
 fi
 
 echo ""
