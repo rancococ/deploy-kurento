@@ -1,0 +1,26 @@
+##########################################################################
+# 部署配置文件(base)
+# 本配置文件(xx.yml)中的变量(${xxx})是从同级目录下的.env文件中读取的
+##########################################################################
+# compose支持的版本2
+version: "2"
+services:
+  # kurento
+  kurento:
+    image: ${IMAGE_REPO}/${IMAGE_KURENTO}
+    container_name: "kurento.${PRODUCT_NAME}.${COMPANY_NAME}"
+    hostname: "kurento.${PRODUCT_NAME}.${COMPANY_NAME}"
+    restart: "always"
+    env_file:
+      - ./kurento.env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./volume/kurento/conf:/etc/kurento:ro
+      - ./volume/kurento/data:/var/lib/kurento:rw
+      - ./volume/kurento/logs:/var/log/kurento-media-server:rw
+    network_mode: "host"
+    extra_hosts:
+      - "kurento.${PRODUCT_NAME}.${COMPANY_NAME}:${HOST_IP}"
+    # cap_add:
+    #   - NET_ADMIN
+    #   - SYS_ADMIN
